@@ -1,0 +1,24 @@
+{
+  "name": "webworker-test",
+  "version": "0.1.0",
+  "description": "-",
+  "main": "src/main.js",
+  "private": true,
+  "devDependencies": {
+    "requirejs": "~2.1.10",
+    "requirejs-text": "~2.0.10",
+    "requirejs-plugins": "~1.0.2"
+  },
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "test"
+  ],
+  "authors": [
+    "Martin Middel <martin.middel@liones.nl>"
+  ],
+  "moduleType": [
+    "amd"
+  ],
+  "license": "MIT"
+}

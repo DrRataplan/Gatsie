@@ -1,0 +1,25 @@
+{
+  "name": "webworker-test",
+  "version": "0.1.0",
+  "description": "-",
+  "main": "src/main.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "amdefine": "*",
+
+    "testem": "*",
+    "chai": "*",
+    "mocha": "*"
+    },
+  "scripts": {
+    "test": "testem -f test/testem.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@bitbucket.org:mmiddel/webworker-test.git"
+  },
+  "license": "MIT"
+}
