@@ -23,72 +23,68 @@ define([
 		 *
 		 *	If 
 		 * 
-		 * @param  {ArrayBuffer}   arraybuffer     [description]
+		 * @param  {Uint8Array}   array     [description]
 		 * @param  {Number}        offset          [description]
 		 * @param  {Number}        length          [description]
 		 * @param  {Number}        type            [description]
 		 * @param  {Array.Number}  serializedData  The data, serialized as 8-bit numbers to write to the array
 		 * @return {Number}        The new Offset
 		 */
-		function writeDataModel(arraybuffer, offset, length, type, serializedData) {
-			var arr = new Uint8Array(arraybuffer, offset, length + 1);
-
-			arr[0] = (length << 4) | type;
+		function writeDataModel(array, offset, length, type, serializedData) {
+			array[offset] = (length << 4) | type;
 			for (var i = 0; i < length; i++) {
-				arr[i + 1] = serializedData[i]; 
+				array[offset + i + 1] = serializedData[i]; 
 			}
-
-			arr.set(arraybuffer, offset);
 
 			return offset + length + 1;
 		}
 
-		function writeNumber(arraybuffer, offset, numberToWrite) {
+		function writeNumber(array, offset, numberToWrite) {
 			var serializedData = [];
 			for (var number = numberToWrite | 0; number; number = number >> 8) {
 				serializedData.push(number & 0xFF);
 			}
 
-			return writeDataModel(arraybuffer, offset, serializedData.length, types.NUMBER, serializedData);
+			var result = writeDataModel(array, offset, serializedData.length, types.NUMBER, serializedData);
+			return result;
 		}
 
-		function writeBoolean(arraybuffer, offset, booleanToWrite) {
-			return writeDataModel(arraybuffer, offset, 1, types.BOOLEAN, [booleanToWrite | 0]);
+		function writeBoolean(array, offset, booleanToWrite) {
+			return writeDataModel(array, offset, 1, types.BOOLEAN, [booleanToWrite | 0]);
 		}
 
-		function readDataModel(arraybuffer, offset) {
-			var lengthReader = new Uint8Array(arraybuffer, offset, 1);
-			var type = lengthReader[0] & 0x7;
+		function readDataModel(array, offset) {
+			var type = array[offset] & 0x7;
 			switch(type) {
 				case types.BOOLEAN:
-					return readBoolean(arraybuffer, offset + 1);
+					return readBoolean(array, offset + 1);
 				case types.NUMBER:
-					return readNumber(arraybuffer, offset + 1, lengthReader[0] >> 4);
+					return readNumber(array, offset + 1, array[offset] >> 4);
 				case types.RAW:
-					var arr = new Uint8Array(arraybuffer, offset + 1, lengthReader[0] >> 4);
-					return arr;
+					return new Uint8Array(array.buffer, offset + 1, array[offset] >> 4);
 			}
 
 			throw new Error(type + ' is not supported!');
 		}
 
-		function readBoolean(arraybuffer, offset) {
-			var arr = new Uint8Array(arraybuffer, offset, 1);
-			return !!arr[0];
+		function readBoolean(array, offset) {
+			return !!array[offset];
 		}
 
-		function readNumber(arraybuffer, offset, length) {
-			var arr = new Uint8Array(arraybuffer, offset, length),
-				number = 0;
+		function readNumber(array, offset, length) {
+			var number = 0;
 
-			while (length) {
-				length--;
-				number |= arr[length] << (8 * length);
+			for(var i = 0; i < length; i++) {
+				number |= array[offset + i] << (8 * i);
 			}
 			return number;
 		}
 
-		function writeObject(arraybuffer, offset, objectToWrite) {
+		function alloc(array, length) {
+
+		}
+
+		function writeObject(array, offset, objectToWrite) {
 			// First: write all the values
 			var keys = Object.keys(objectToWrite),
 				key = key.pop(),
@@ -99,13 +95,13 @@ define([
 				keyPointerMap[key] = offset;
 				switch(typeof value) {
 					case 'object':
-						offset = writeObject(arraybuffer, offset, value);
+						offset = writeObject(array, offset, value);
 						break;
 					case 'number':
-						offset = writeNumber(arraybuffer, offset, value);
+						offset = writeNumber(array, offset, value);
 						break;
 					case 'boolean':
-						offset = writeBoolean(arraybuffer, offset, value);
+						offset = writeBoolean(array, offset, value);
 				}
 				key = keys.pop();
 			}

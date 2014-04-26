@@ -7,18 +7,18 @@ define([
 
 	var expect = chai.expect,
 
-		withAnSetUpArrayBufferOfLength = function(length, callback) {
-			var arrayBuffer = new ArrayBuffer(length);
-			callback(arrayBuffer);
+		withAnSetUpTypedArrayOfLength = function(length, callback) {
+			var array = new Uint8Array(length);
+			callback(array);
 		};
 
 	describe('Writing an array',
 		function() {
 			it('Should round-trip raw data with length 1 to the same result',
 				function() {
-					withAnSetUpArrayBufferOfLength(128, function(arrayBuffer) {
-						dataModel.writeDataModel(arrayBuffer, 0, 1, dataModel.types.RAW, [123]);
-						var roundTripped = dataModel.readDataModel(arrayBuffer, 0);
+					withAnSetUpTypedArrayOfLength(128, function(array) {
+						dataModel.writeDataModel(array, 0, 1, dataModel.types.RAW, [123]);
+						var roundTripped = dataModel.readDataModel(array, 0);
 						
 						expect(roundTripped.length).to.equal(1);
 						expect(roundTripped[0]).to.equal(123);
@@ -27,9 +27,9 @@ define([
 
 			it('Should round-trip raw data with length 8 to the same result',
 				function() {
-					withAnSetUpArrayBufferOfLength(128, function(arrayBuffer) {
-						dataModel.writeDataModel(arrayBuffer, 0, 8, dataModel.types.RAW, [0, 1, 2, 3, 4, 5, 6, 7]);
-						var roundTripped = dataModel.readDataModel(arrayBuffer, 0);
+					withAnSetUpTypedArrayOfLength(128, function(array) {
+						dataModel.writeDataModel(array, 0, 8, dataModel.types.RAW, [0, 1, 2, 3, 4, 5, 6, 7]);
+						var roundTripped = dataModel.readDataModel(array, 0);
 						
 						expect(roundTripped.length).to.equal(8);
 						expect(roundTripped[0]).to.equal(0);
@@ -45,10 +45,10 @@ define([
 
 			it('Should round-trip a number of 1 byte to the same result',
 				function() {
-					withAnSetUpArrayBufferOfLength(128, function(arrayBuffer) {
-						dataModel.writeNumber(arrayBuffer, 0, 123);
+					withAnSetUpTypedArrayOfLength(128, function(array) {
+						dataModel.writeNumber(array, 0, 123);
 
-						var number = dataModel.readDataModel(arrayBuffer, 0);
+						var number = dataModel.readDataModel(array, 0);
 
 						expect(number).to.equal(123);
 					});
@@ -56,10 +56,10 @@ define([
 
 			it('Should round-trip a number of 2 byte to the same result',
 				function() {
-					withAnSetUpArrayBufferOfLength(128, function(arrayBuffer) {
-						dataModel.writeNumber(arrayBuffer, 0, 0xABCD);
+					withAnSetUpTypedArrayOfLength(128, function(array) {
+						dataModel.writeNumber(array, 0, 0xABCD);
 
-						var number = dataModel.readDataModel(arrayBuffer, 0);
+						var number = dataModel.readDataModel(array, 0);
 
 						expect(number).to.equal(0xABCD);
 					});
@@ -67,12 +67,12 @@ define([
 
 			it('Should round-trip multiple numbers of 2 byte to the same result',
 				function() {
-					withAnSetUpArrayBufferOfLength(128, function(arrayBuffer) {
-						var newOffset = dataModel.writeNumber(arrayBuffer, 0, 0xABCD);
+					withAnSetUpTypedArrayOfLength(128, function(array) {
+						var newOffset = dataModel.writeNumber(array, 0, 0xABCD);
 
-						dataModel.writeNumber(arrayBuffer, newOffset, 0xEF01);
+						dataModel.writeNumber(array, newOffset, 0xEF01);
 
-						var number2 = dataModel.readDataModel(arrayBuffer, newOffset);
+						var number2 = dataModel.readDataModel(array, newOffset);
 
 						expect(number2).to.equal(0xEF01);
 					});
@@ -80,10 +80,10 @@ define([
 
 			it('Should round-trip a number of n byte to the same result',
 				function() {
-					withAnSetUpArrayBufferOfLength(128, function(arrayBuffer) {
-						dataModel.writeNumber(arrayBuffer, 0, 0x01234567);
+					withAnSetUpTypedArrayOfLength(128, function(array) {
+						dataModel.writeNumber(array, 0, 0x01234567);
 
-						var number = dataModel.readDataModel(arrayBuffer, 0);
+						var number = dataModel.readDataModel(array, 0);
 
 						expect(number).to.equal(0x01234567);
 					});
@@ -91,16 +91,16 @@ define([
 
 			it('Should round-trip a boolean to the same result',
 				function() {
-					withAnSetUpArrayBufferOfLength(128, function(arrayBuffer) {
-						dataModel.writeBoolean(arrayBuffer, 0, true);
+					withAnSetUpTypedArrayOfLength(128, function(array) {
+						dataModel.writeBoolean(array, 0, true);
 
-						var b = dataModel.readDataModel(arrayBuffer, 0);
+						var b = dataModel.readDataModel(array, 0);
 
 						expect(b).to.equal(true);
 
-						dataModel.writeBoolean(arrayBuffer, 0, false);
+						dataModel.writeBoolean(array, 0, false);
 
-						b = dataModel.readDataModel(arrayBuffer, 0);
+						b = dataModel.readDataModel(array, 0);
 
 						expect(b).to.equal(false);
 
