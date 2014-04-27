@@ -4,7 +4,6 @@ define([
 		dataModel
 	) {
 	'use strict';
-
 	var expect = chai.expect,
 
 		withAnSetUpTypedArrayOfLength = function(length, callback) {
@@ -117,6 +116,7 @@ define([
 		});
 
 	describe('Alloc', function() {
+
 		it('Should start allocating memory from the beginning', function() {
 			withAnSetUpTypedArrayOfLength(4, function(array) {
 				var freePointer = dataModel.alloc(array, 1);
@@ -141,6 +141,29 @@ define([
 						dataModel.writeBoolean(array, true);
 					}).to.throw(Error);
 				});
+		});
+	});
+
+	describe('Free', function() {
+		it('Should allow a full array to have its data freed to allow new data', function() {
+			// Fill the array to the brim
+			withAnSetUpTypedArrayOfLength(4096 * 2, function(array) {
+				var pointer1 = dataModel.writeNumber(array, 0xAA);
+				expect(function() {
+					var i = 1;
+					while(true){
+						dataModel.writeNumber(array, 0xAA);
+					}
+				}).to.throw(Error);
+
+				dataModel.free(array, pointer1);
+				expect(function() {
+					dataModel.writeNumber(array, 0xAA);
+				}).to.not.throw(Error);
+
+
+			});
+			
 		});
 	});
 	}

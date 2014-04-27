@@ -16,9 +16,9 @@ define([
 
 		/**
 		 * Writes a piece of data as:
-		 * 	- 4 byte length
-		 * 	- 1 byte not used
-		 * 	- 3 byte type
+		 * 	- 4 bit length
+		 * 	- 1 bit GC
+		 * 	- 3 bit type
 		 * 	- <length> byte serializedData
 		 *
 		 *	If 
@@ -83,33 +83,62 @@ define([
 		/**
 		 * Lineary looks for a gap large enough to fit length
 		 *
-		 * See, there IS a use for GOTOs
 		 * @param  {[type]} array  [description]
 		 * @param  {[type]} length [description]
 		 * @return {[type]}        [description]
 		 */
 		function alloc(array, length) {
 			var arrayLength = array.length;
-			for(var i = 0; i < arrayLength; ++i) {
-				var reservedLength = array[i] >> 4;
-
-				if (reservedLength !== 0) {
+			for(var i = 0; true; ++i) {
+				if(i > arrayLength) {
+					throw new Error('');
+				}
+				//console.log('Looking at '+i);
+				var headerByte = array[i],
+					reservedLength = (headerByte >> 4) | 0;
+				// If this item has not been GCed (GC bit = 1), it's useless
+				if (headerByte && (headerByte & 0x8) !== 0x8){
+					//console.log('skipping '+reservedLength+' from '+i);
+					foundFreeLength = 0;
 					i += reservedLength;
 					continue;
 				}
+				//console.log('found empty @ '+i);
 
-				// Look for free space at all of the next positions
-				var j = i + 1,
-					foundFreeLength = 1;
-				while(array[j++] >> 4 === 0) {	
-					if (++foundFreeLength >= length) {
+				// Start looking into this item to find if it's long enough
+				var foundFreeLength = reservedLength + 1;
+
+				for(var j = i + reservedLength; j < arrayLength; j++) {
+					if (foundFreeLength >= length) {
+						//console.log('found '+foundFreeLength+' at '+i);
 						return i;
 					}
+					//console.log('Looking into '+j);
+					headerByte = array[j];
+					reservedLength = headerByte >> 4;
+					if (headerByte & 0x8 === 0x8) {
+						// GCed, this piece of memory is free
+						j += reservedLength;
+						foundFreeLength += reservedLength;
+					} else if(reservedLength === 0) {
+						// Empty item, see if the next item is also filled
+						foundFreeLength ++;
+					} else {
+						// Item is in use,
+						//  Look further in outer loop
+						i = j;
+						foundFreeLength = 0;
+						break;
+					}
 				}
-				foundFreeLength = 0;
-				i = j;
 			}
 			throw new Error('OUTOFMEMORY');
+		}
+
+		function free(array, offset) {
+			//console.log(offset+' freed: '+(array[offset] >> 4));
+			// Manually free this piece of data
+			array[offset] |= 0x8;
 		}
 
 		function writeObject(array, offset, objectToWrite) {
@@ -142,7 +171,8 @@ define([
 			writeNumber: writeNumber,
 			readDataModel: readDataModel,
 
-			alloc: alloc
+			alloc: alloc,
+			free: free
 		};
 	}
 );
